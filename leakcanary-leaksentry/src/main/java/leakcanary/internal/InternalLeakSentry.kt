@@ -41,7 +41,7 @@ internal object InternalLeakSentry {
     }
   }
 
-  private val checkRetainedExecutor = Executor {
+  private val checkRetainedExecutor = Executor { // 默认五秒后执行
     mainHandler.postDelayed(it, LeakSentry.config.watchDurationMillis)
   }
   val refWatcher = RefWatcher(
@@ -53,20 +53,20 @@ internal object InternalLeakSentry {
 
   fun install(application: Application) {
     CanaryLog.d("Installing LeakSentry")
-    checkMainThread()
+    checkMainThread() // 只能在主线程调用，否则会抛出异常
     if (this::application.isInitialized) {
       return
     }
     InternalLeakSentry.application = application
 
     val configProvider = { LeakSentry.config }
-    ActivityDestroyWatcher.install(
+    ActivityDestroyWatcher.install( // 监听 Activity.onDestroy()
         application, refWatcher, configProvider
     )
-    FragmentDestroyWatcher.install(
+    FragmentDestroyWatcher.install( // 监听 Fragment.onDestroy()
         application, refWatcher, configProvider
     )
-    listener.onLeakSentryInstalled(application)
+    listener.onLeakSentryInstalled(application) // Sentry 哨兵
   }
 
   private fun checkMainThread() {

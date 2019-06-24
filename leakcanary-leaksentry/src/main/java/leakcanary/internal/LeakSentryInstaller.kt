@@ -10,13 +10,15 @@ import leakcanary.CanaryLog
 /**
  * Content providers are loaded before the application class is created. [LeakSentryInstaller] is
  * used to install [leaksentry.LeakSentry] on application start.
+ *
+ * Content Provider 在 Application 创建之前被自动加载，因此无需用户手动在 onCrate() 中进行初始化
  */
 internal class LeakSentryInstaller : ContentProvider() {
 
   override fun onCreate(): Boolean {
     CanaryLog.logger = DefaultCanaryLog()
     val application = context!!.applicationContext as Application
-    InternalLeakSentry.install(application)
+    InternalLeakSentry.install(application) // 进行初始化工作，核心
     return true
   }
 

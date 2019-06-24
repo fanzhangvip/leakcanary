@@ -41,7 +41,7 @@ internal class ActivityDestroyWatcher private constructor(
     ) {
       val activityDestroyWatcher =
         ActivityDestroyWatcher(refWatcher, configProvider)
-      application.registerActivityLifecycleCallbacks(activityDestroyWatcher.lifecycleCallbacks)
+      application.registerActivityLifecycleCallbacks(activityDestroyWatcher.lifecycleCallbacks) // 注册 Activity 生命周期监听
     }
   }
 }

@@ -85,6 +85,8 @@ internal class HeapDumpTrigger(
       return
     }
 
+    // 可能存在被观察的引用将要变得弱可达，但是还未入队引用队列。
+    // 这时候应该主动调用一次 GC，可能可以避免一次 heap dump
     gcTrigger.runGc()
 
     retainedKeys = refWatcher.retainedKeys
@@ -96,7 +98,7 @@ internal class HeapDumpTrigger(
     CanaryLog.d("Found %d retained references, dumping the heap", retainedKeys.size)
     HeapDumpMemoryStore.heapDumpUptimeMillis = SystemClock.uptimeMillis()
     dismissNotification()
-    val heapDumpFile = heapDumper.dumpHeap()
+    val heapDumpFile = heapDumper.dumpHeap() // AndroidHeapDumper
     if (heapDumpFile == null) {
       CanaryLog.d("Failed to dump heap, will retry in %d ms", WAIT_AFTER_DUMP_FAILED_MILLIS)
       scheduleRetainedInstanceCheck("failed to dump heap", WAIT_AFTER_DUMP_FAILED_MILLIS)
@@ -104,9 +106,9 @@ internal class HeapDumpTrigger(
       return
     }
 
-    refWatcher.removeRetainedKeys(retainedKeys)
+    refWatcher.removeRetainedKeys(retainedKeys) // 移除已经 heap dump 的 retainedKeys
 
-    HeapAnalyzerService.runAnalysis(application, heapDumpFile)
+    HeapAnalyzerService.runAnalysis(application, heapDumpFile) // 分析 heap dump 文件
   }
 
   fun onDumpHeapReceived() {
