@@ -36,14 +36,16 @@ class RefWatcher constructor(
 
   /**
    * References passed to [watch] that haven't made it to [retainedReferences] yet.
+   * watch() 方法传进来的引用，尚未判定为泄露
    */
   private val watchedReferences = mutableMapOf<String, KeyedWeakReference>()
   /**
    * References passed to [watch] that we have determined to be retained longer than they should
    * have been.
+   * watch() 方法传进来的引用，已经被判定为泄露
    */
   private val retainedReferences = mutableMapOf<String, KeyedWeakReference>()
-  private val queue = ReferenceQueue<Any>()
+  private val queue = ReferenceQueue<Any>() // 引用队列，配合弱引用使用
 
   val hasRetainedReferences: Boolean
     @Synchronized get() {
@@ -82,11 +84,11 @@ class RefWatcher constructor(
     if (!isEnabled()) {
       return
     }
-    removeWeaklyReachableReferences() // 首先清空引用队列 queue
+    removeWeaklyReachableReferences() // 移除队列中将要被 GC 的引用
     val key = UUID.randomUUID()
         .toString()
     val watchUptimeMillis = clock.uptimeMillis()
-    val reference =
+    val reference = // 构建当前引用的弱引用对象，并关联引用队列 queue
       KeyedWeakReference(watchedReference, key, referenceName, watchUptimeMillis, queue)
     if (referenceName != "") {
       CanaryLog.d(
@@ -99,9 +101,10 @@ class RefWatcher constructor(
       )
     }
 
-    watchedReferences[key] = reference
+    watchedReferences[key] = reference // 将引用存入 watchedReferences
     checkRetainedExecutor.execute {
-      moveToRetained(key)
+      moveToRetained(key) // 如果当前引用未被移除，仍在 watchedReferences  队列中，
+                          // 说明仍未被 GC，移入 retainedReferences 队列中,暂时标记为泄露
     }
   }
 

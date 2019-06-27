@@ -41,7 +41,7 @@ internal interface FragmentDestroyWatcher {
     ) {
       val fragmentDestroyWatchers = mutableListOf<FragmentDestroyWatcher>()
 
-      if (SDK_INT >= O) {
+      if (SDK_INT >= O) { // >= 26，使用 AndroidOFragmentDestroyWatcher
         fragmentDestroyWatchers.add(
             AndroidOFragmentDestroyWatcher(refWatcher, configProvider)
         )
@@ -51,7 +51,7 @@ internal interface FragmentDestroyWatcher {
               SUPPORT_FRAGMENT_CLASS_NAME
           )
       ) {
-        fragmentDestroyWatchers.add(
+        fragmentDestroyWatchers.add( // androidx 使用 SupportFragmentDestroyWatcher
             SupportFragmentDestroyWatcher(refWatcher, configProvider)
         )
       }

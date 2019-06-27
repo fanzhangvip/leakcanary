@@ -28,7 +28,7 @@ internal class ActivityDestroyWatcher private constructor(
   private val lifecycleCallbacks = object : ActivityLifecycleCallbacksAdapter() {
     override fun onActivityDestroyed(activity: Activity) {
       if (configProvider().watchActivities) {
-        refWatcher.watch(activity)
+        refWatcher.watch(activity) // 监听到 onDestroy() 之后，通过 refWatcher 监测 Activity
       }
     }
   }

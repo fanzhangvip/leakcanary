@@ -73,6 +73,7 @@ internal class HeapDumpTrigger(
 
     var retainedKeys = refWatcher.retainedKeys
 
+    // 当前泄露实例个数小于 5 个，不进行 heap dump
     if (checkRetainedCount(retainedKeys, config.retainedVisibleThreshold)) return
 
     if (!config.dumpHeapWhenDebugging && DebuggerControl.isDebuggerAttached) {
@@ -152,7 +153,7 @@ internal class HeapDumpTrigger(
 
   private fun checkRetainedCount(
     retainedKeys: Set<String>,
-    retainedVisibleThreshold: Int
+    retainedVisibleThreshold: Int // 默认为 5 个
   ): Boolean {
     if (retainedKeys.isEmpty()) {
       CanaryLog.d("No retained instances")
@@ -167,8 +168,9 @@ internal class HeapDumpTrigger(
             retainedKeys.size,
             retainedVisibleThreshold
         )
+        // 通知用户 "App visible, waiting until 5 retained instances"
         showRetainedCountBelowThresholdNotification(retainedKeys.size, retainedVisibleThreshold)
-        scheduleRetainedInstanceCheck(
+        scheduleRetainedInstanceCheck( // 5s 后再次发起检测
             "Showing retained instance notification", WAIT_FOR_INSTANCE_THRESHOLD_MILLIS
         )
         return true
@@ -184,13 +186,13 @@ internal class HeapDumpTrigger(
     checkScheduled = true
     backgroundHandler.post {
       checkScheduled = false
-      checkRetainedInstances(reason)
+      checkRetainedInstances(reason) // 检测泄露实例
     }
   }
 
   private fun scheduleRetainedInstanceCheck(
     reason: String,
-    delayMillis: Long
+    delayMillis: Long // 默认 5 s
   ) {
     if (checkScheduled) {
       return

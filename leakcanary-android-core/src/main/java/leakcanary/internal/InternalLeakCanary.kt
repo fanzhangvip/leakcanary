@@ -45,15 +45,15 @@ internal object InternalLeakCanary : LeakSentryListener {
   override fun onLeakSentryInstalled(application: Application) {
     this.application = application
 
-    val heapDumper = AndroidHeapDumper(application, leakDirectoryProvider)
+    val heapDumper = AndroidHeapDumper(application, leakDirectoryProvider) // 用于 heap dump
 
-    val gcTrigger = GcTrigger.Default
+    val gcTrigger = GcTrigger.Default // 用于手动调用 GC
 
-    val configProvider = { LeakCanary.config }
+    val configProvider = { LeakCanary.config } // 配置项
 
     val handlerThread = HandlerThread(LEAK_CANARY_THREAD_NAME)
     handlerThread.start()
-    val backgroundHandler = Handler(handlerThread.looper)
+    val backgroundHandler = Handler(handlerThread.looper) // 发起内存泄漏检测的线程
 
     heapDumpTrigger = HeapDumpTrigger(
         application, backgroundHandler, LeakSentry.refWatcher, gcTrigger, heapDumper, configProvider
